@@ -18,6 +18,7 @@ model User {
   hash      String
   firstName String?
   lastName  String?
+
   bookmarks Bookmark[]
 
   @@map("users")

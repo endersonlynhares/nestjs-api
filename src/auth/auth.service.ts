@@ -27,6 +27,7 @@ export class AuthService {
 
       //return the saved user
       return user;
+
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2002") {
@@ -38,10 +39,28 @@ export class AuthService {
     }
   }
 
-  signin() {
-    return {
-      msg: "I have signed in"
-    };
+  async signin(dto: AuthDto) {
+
+    //find the user by email
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        email: dto.email
+      }
+    });
+
+    //if user does not exist throw exception
+    if (!user) throw new ForbiddenException("Credentials incorrect");
+
+    //compare pass
+    const pwMatches = await argon.verify(user.hash, dto.password);
+
+    //if pass incorrect throw exception
+    if (!pwMatches) throw new ForbiddenException("Credentials incorrect");
+
+    //send back the user
+    delete user.hash;
+
+    return user;
   }
 }
 
